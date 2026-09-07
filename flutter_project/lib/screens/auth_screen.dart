@@ -204,11 +204,11 @@ class _AuthScreenState extends State<AuthScreen>
       
       if (mounted) Navigator.pop(context); // Close loading dialog
 
-      if (signUpResult.$2 == null) {
-        print('❌ ONBOARDING ERROR: No user ID returned from signup');
+      if (!signUpResult.$1 || signUpResult.$2 == null) {
+        print('❌ ONBOARDING ERROR: SignUp failed or no user ID returned');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('❌ SignUp failed - no user ID returned')),
+            const SnackBar(content: Text('❌ SignUp failed')),
           );
         }
         return;

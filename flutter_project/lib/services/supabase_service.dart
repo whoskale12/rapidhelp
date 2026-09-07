@@ -28,7 +28,7 @@ Future<void> initSupabase({
 }
 
 /// Get current authenticated user
-Future<AuthUser?> getCurrentUser() async {
+Future<User?> getCurrentUser() async {
   try {
     final session = supabase.auth.currentSession;
     final user = session?.user;
@@ -54,33 +54,35 @@ bool isUserAuthenticated() {
 }
 
 /// Sign up with phone number (OTP)
-Future<({AuthResponse response, String? userId})> signUpWithPhone(String phone) async {
+/// Returns tuple: (bool success, String? userId)
+Future<(bool, String?)> signUpWithPhone(String phone) async {
   try {
     print('🔵 AUTH FLOW: Starting phone signup with: $phone');
     
-    final response = await supabase.auth.signUpWithPhone(phone);
-    final userId = response.user?.id;
+    await supabase.auth.signInWithOtp(
+      phone: phone,
+    );
     
-    if (response.session != null) {
-      print('✅ AUTH PHONE SIGNUP: Session created');
+    // The signInWithOtp returns void, but we can get user from session
+    final session = supabase.auth.currentSession;
+    final userId = session?.user?.id;
+    
+    if (userId != null) {
+      print('✅ AUTH PHONE SIGNUP: OTP sent');
       print('🔵 AUTH USER ID: $userId');
+      return (true, userId);
     } else {
       print('ℹ️  AUTH PHONE SIGNUP: OTP sent, awaiting verification');
+      return (true, null);
     }
-    
-    return (response: response, userId: userId);
   } catch (e) {
     print('❌ AUTH SIGNUP ERROR: ${e.toString()}');
-    if (e is AuthException) {
-      print('❌ AUTH EXCEPTION: ${e.message}');
-      print('📍 Status Code: ${e.statusCode}');
-    }
     rethrow;
   }
 }
 
 /// Verify OTP token
-Future<({AuthResponse response, String? userId})> verifyOtp({
+Future<(AuthResponse?, String?)> verifyOtp({
   required String phone,
   required String token,
 }) async {
@@ -98,7 +100,7 @@ Future<({AuthResponse response, String? userId})> verifyOtp({
     if (response.user != null) {
       print('✅ OTP VERIFIED: User ID: $userId');
       print('🔵 SUPABASE AUTH USER ID: $userId');
-      return (response: response, userId: userId);
+      return (response, userId);
     } else {
       print('❌ OTP VERIFICATION FAILED: No user returned');
       throw Exception('OTP verification failed - no user returned');
@@ -107,7 +109,6 @@ Future<({AuthResponse response, String? userId})> verifyOtp({
     print('❌ OTP VERIFY ERROR: ${e.toString()}');
     if (e is AuthException) {
       print('❌ AUTH EXCEPTION: ${e.message}');
-      print('📍 Status Code: ${e.statusCode}');
     }
     rethrow;
   }

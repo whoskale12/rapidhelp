@@ -1,0 +1,6 @@
+{
+  "name": "RapidHelp",
+  "description": "Rapid roadside assistance and emergency response platform with real-time tracking, on-site service negotiation, and rewards.",
+  "requestFramePermissions": ["geolocation", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
